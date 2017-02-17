@@ -74,12 +74,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, Vi
         h = displayMetrics.heightPixels;
         w = displayMetrics.widthPixels;
 
-        btn = ((Button) findViewById(R.id.btn));
-        btn.setOnClickListener(this);
-        rl = ((RelativeLayout) findViewById(R.id.rl));
-        seekBar = ((SeekBar) findViewById(R.id.seekBar));
-
-        surfaceView = ((SurfaceView) findViewById(R.id.surfaceView));
+        initId();
         surfaceHolder = surfaceView.getHolder();
         surfaceHolder.addCallback(this);
 
@@ -117,6 +112,15 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, Vi
                 return false;
             }
         });
+    }
+
+    private void initId() {
+        btn = ((Button) findViewById(R.id.btn));
+        btn.setOnClickListener(this);
+        rl = ((RelativeLayout) findViewById(R.id.rl));
+        seekBar = ((SeekBar) findViewById(R.id.seekBar));
+
+        surfaceView = ((SurfaceView) findViewById(R.id.surfaceView));
     }
 
     @Override
