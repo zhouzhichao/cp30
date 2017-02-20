@@ -14,7 +14,6 @@
 
 package com.crestv.cp30;
 
-import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
@@ -33,12 +32,14 @@ import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 
+import com.crestv.cp30.activity.BaseActivity;
+
 import java.io.IOException;
 
 /*
  * MainActivity class that loads MainFragment
  */
-public class MainActivity extends Activity implements SurfaceHolder.Callback, View.OnClickListener {
+public class MainActivity extends BaseActivity implements SurfaceHolder.Callback, View.OnClickListener {
 
     private Button btn;
     private RelativeLayout rl;
@@ -50,7 +51,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, Vi
 
     private int w, h;
 
-
+    public static boolean isForeground = false;
     private Handler handler = new Handler(){
         @Override
         public void handleMessage(Message msg) {
@@ -59,6 +60,7 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, Vi
             if(mediaPlayer!=null&&mediaPlayer.isPlaying()){
                 seekBar.setProgress(mediaPlayer.getCurrentPosition());
             }
+            MainActivity.super.getSingle();//调用方法
         }
     };
 
@@ -67,14 +69,14 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, Vi
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
 //获取屏幕宽和高
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         h = displayMetrics.heightPixels;
         w = displayMetrics.widthPixels;
-
+        Log.e("======","==="+h);
         initId();
+        //registerMessageReceiver();
         surfaceHolder = surfaceView.getHolder();
         surfaceHolder.addCallback(this);
 
@@ -236,4 +238,39 @@ public class MainActivity extends Activity implements SurfaceHolder.Callback, Vi
         }
 
     }
+
+    //private MessageReceiver mMessageReceiver;
+   /* public static final String MESSAGE_RECEIVED_ACTION = "com.crestv.cp30.MESSAGE_RECEIVED_ACTION";
+    public static final String KEY_TITLE = "title";
+    public static final String KEY_MESSAGE = "message";
+    public static final String KEY_EXTRAS = "extras";
+
+    public void registerMessageReceiver() {
+        mMessageReceiver = new MessageReceiver();
+        IntentFilter filter = new IntentFilter();
+        filter.setPriority(IntentFilter.SYSTEM_HIGH_PRIORITY);
+        filter.addAction(MESSAGE_RECEIVED_ACTION);
+        registerReceiver(mMessageReceiver, filter);
+    }
+
+    public class MessageReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (MESSAGE_RECEIVED_ACTION.equals(intent.getAction())) {
+                String messge = intent.getStringExtra(KEY_MESSAGE);
+                String extras = intent.getStringExtra(KEY_EXTRAS);
+                StringBuilder showMsg = new StringBuilder();
+                showMsg.append(KEY_MESSAGE + " : " + messge + "\n");
+
+                setCostomMsg(showMsg.toString());
+            }
+        }
+    }
+    private void setCostomMsg(String msg){
+
+    }*/
+
+
+
 }
