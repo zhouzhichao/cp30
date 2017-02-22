@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_play_video"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:transitionName="surfaceView"
+    android:background="@color/lb_action_text_color"
+    tools:context="com.crestv.cp30.activity.PlayVideoActivity">
+    <SurfaceView
+        android:id="@+id/surfaceView"
+        android:focusable="false"
+        android:clickable="false"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <Button
+        android:id="@+id/btn"
+        android:visibility="gone"
+        android:text="全屏"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <SeekBar
+        android:id="@+id/seekBar"
+        android:visibility="gone"
+        android:layout_toLeftOf="@id/btn"
+        android:layout_alignParentBottom="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+</RelativeLayout>

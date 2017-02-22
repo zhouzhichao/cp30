@@ -1,4 +1,4 @@
-package com.crestv.cp30.activity;
+package com.crestv.cp30.base;
 
 import android.app.Activity;
 import android.os.Bundle;

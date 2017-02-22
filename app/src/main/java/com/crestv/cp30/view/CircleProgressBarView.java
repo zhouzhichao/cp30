@@ -52,7 +52,7 @@ public class CircleProgressBarView extends View {
         paint.reset();// 将画笔重置
         paint.setStrokeWidth(3);// 再次设置画笔的宽度
         paint.setTextSize(35);// 设置文字的大小
-        paint.setColor(Color.BLACK);// 设置画笔颜色
+        paint.setColor(Color.WHITE);// 设置画笔颜色
         if (progress == max) {
             canvas.drawText("完成", 70, 110, paint);
         } else {
