@@ -1,12 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:transitionName="surfaceView"
-    android:background="@color/lb_action_text_color"
-    android:id="@+id/rl"
     tools:context=".MainActivity">
+    <RelativeLayout
+        android:id="@+id/rlMain"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/lb_action_text_color">
+
+    </RelativeLayout>
+    <RelativeLayout
+        android:id="@+id/activity_down_load"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true">
+            <com.crestv.cp30.view.CircleProgressBarView
+                android:id="@+id/circleProgressBar"
+                android:layout_gravity="center_horizontal"
+                android:layout_width="101dp"
+                android:layout_height="101dp"
+                />
+            <TextView
+                android:id="@+id/tv"
+                android:textColor="@color/lb_browse_title_color"
+                android:layout_below="@id/circleProgressBar"
+                android:layout_gravity="center_horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+    </RelativeLayout>
+    <RelativeLayout
+        android:id="@+id/rlSurfaceView"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <SurfaceView
+            android:id="@+id/surfaceView"
+            android:focusable="false"
+            android:clickable="false"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <Button
+            android:id="@+id/btn"
+            android:visibility="gone"
+            android:text="全屏"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <SeekBar
+            android:id="@+id/seekBar"
+            android:visibility="gone"
+            android:layout_toLeftOf="@id/btn"
+            android:layout_alignParentBottom="true"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </RelativeLayout>
 
 
-</RelativeLayout>
+</FrameLayout>

@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 
+import com.crestv.cp30.MainActivity;
 import com.crestv.cp30.Manifest;
 import com.crestv.cp30.R;
 import com.crestv.cp30.util.L;
@@ -18,18 +19,27 @@ import com.yanzhenjie.permission.PermissionListener;
 
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class DownLoadActivity extends Activity {
 
     private CircleProgressBarView circleProgressBar;
     private TextView tv;
-
+    private List<String> filePathList;
+    private long allDwonLoadCount;
+    private int num;
+    private int errorCount;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_down_load);
+        num=0;
+        errorCount=0;
         initId();
+        filePathList=new ArrayList<>();
+        filePathList.add("http://file.86580.cn:9001/syptapp/cers/LionHeart.mp4");
+        filePathList.add("http://file.86580.cn:9001/syptapp/cers/LionHeart01.mp4");
         initDownLoad();
     }
 
@@ -37,7 +47,7 @@ public class DownLoadActivity extends Activity {
         // 先判断是否有权限。
         if (AndPermission.hasPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
             // 有权限，直接do anything.
-            TRequestQueue.getDownLoadInstance().noHttpDownLoadFile(0x103, "http://file.86580.cn:9001/syptapp/cers/LionHeart.mp4", new JSONObject(), downloadListener);
+                TRequestQueue.getDownLoadInstance().noHttpDownLoadFile(0x103,filePathList.get(num) , new JSONObject(), downloadListener);
         } else {
             // 申请权限。
             AndPermission.with(this)
@@ -58,12 +68,24 @@ public class DownLoadActivity extends Activity {
         @Override
         public void onDownloadError(int what, Exception exception) {
             L.e("==exception==", "==" + exception);
+
+            if (exception.toString().contains("The network is not available")){
+
+            }else {
+                errorCount++;
+                if (errorCount>60){
+
+                }else {
+                    TRequestQueue.getDownLoadInstance().noHttpDownLoadFile(0x103, filePathList.get(num), new JSONObject(), downloadListener);
+                }
+            }
         }
 
         @Override
         public void onStart(int what, boolean isResume, long rangeSize, Headers responseHeaders, long allCount) {
             L.e("==rangeSize==", "==" + rangeSize);
             L.e("==allCount==", "==" + allCount);
+            tv.setText("正在更新第"+(num+1)+"个视频，共"+filePathList.size()+"个");
             circleProgressBar.setVisibility(View.VISIBLE);
             circleProgressBar.setMax(100);
         }
@@ -76,12 +98,18 @@ public class DownLoadActivity extends Activity {
         @Override
         public void onFinish(int what, String filePath) {
             L.e("==filePath==", "==" + filePath);
-            circleProgressBar.setVisibility(View.GONE);
-            //开始播放视频
-            Intent intent =new Intent(DownLoadActivity.this,PlayVideoActivity.class);
-            intent.putExtra("filePath",filePath);
-            startActivity(intent);
-            finish();
+            //circleProgressBar.setVisibility(View.GONE);
+            num++;
+            if (num<filePathList.size()) {
+                TRequestQueue.getDownLoadInstance().noHttpDownLoadFile(0x103,filePathList.get(num) , new JSONObject(), downloadListener);
+            }else {
+                //开始播放视频
+                Intent intent =new Intent(DownLoadActivity.this,MainActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.putExtra("versionCode",1);
+                startActivity(intent);
+            }
+
         }
 
         @Override
@@ -103,7 +131,7 @@ public class DownLoadActivity extends Activity {
             // 权限申请成功回调。
             if (requestCode == 100) {
                 // TODO 相应代码。
-                TRequestQueue.getDownLoadInstance().noHttpDownLoadFile(0x103, "http://file.86580.cn:9001/syptapp/cers/LionHeart.mp4", new JSONObject(), downloadListener);
+                TRequestQueue.getDownLoadInstance().noHttpDownLoadFile(0x103, filePathList.get(num), new JSONObject(), downloadListener);
 
             } else if (requestCode == 101) {
                 // TODO 相应代码。

@@ -25,7 +25,13 @@ import cn.jpush.android.api.JPushInterface;
  */
 public class MyReceiver extends BroadcastReceiver {
 	private static final String TAG = "JPush";
-
+	public interface NotifyListener{
+		void notifyListener(String filePath);
+	}
+	public static NotifyListener notifyListener;
+	public static void setNotifyListener(NotifyListener notifyListener){
+		MyReceiver.notifyListener=notifyListener;
+	}
 	@Override
 	public void onReceive(Context context, Intent intent) {
         Bundle bundle = intent.getExtras();
@@ -40,7 +46,7 @@ public class MyReceiver extends BroadcastReceiver {
 			Log.e("==TAG===","===="+bundle.getString(JPushInterface.EXTRA_MESSAGE));
         	Log.e(TAG, "[MyReceiver] 接收到推送下来的自定义消息: " + bundle.getString(JPushInterface.EXTRA_MESSAGE));
         	//processCustomMessage(context, bundle);
-        
+			MyReceiver.notifyListener.notifyListener(bundle.getString(JPushInterface.EXTRA_MESSAGE));
         } else if (JPushInterface.ACTION_NOTIFICATION_RECEIVED.equals(intent.getAction())) {
             Log.e(TAG, "[MyReceiver] 接收到推送下来的通知==:"+bundle.getString(JPushInterface.EXTRA_ALERT));
 			Log.e(TAG, "[MyReceiver] bundle: " + bundle);

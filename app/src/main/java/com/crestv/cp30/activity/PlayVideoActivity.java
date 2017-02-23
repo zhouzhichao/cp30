@@ -113,8 +113,9 @@ public class PlayVideoActivity extends Activity implements SurfaceHolder.Callbac
                                 surfaceView, getResources().getString(R.string.transition_movie_img));
                 Intent intent=new Intent(PlayVideoActivity.this, MainActivity.class);
                 intent.putExtra("versionCode",1);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                 ActivityCompat.startActivity(PlayVideoActivity.this, intent, compat.toBundle());
-                finish();
+
             }
         });
     }
@@ -122,7 +123,7 @@ public class PlayVideoActivity extends Activity implements SurfaceHolder.Callbac
     private void initId() {
         btn = ((Button) findViewById(R.id.btn));
         btn.setOnClickListener(this);
-        rl = ((RelativeLayout) findViewById(R.id.rl));
+        rl = ((RelativeLayout) findViewById(R.id.rlSurfaceView));
         seekBar = ((SeekBar) findViewById(R.id.seekBar));
 
         surfaceView = ((SurfaceView) findViewById(R.id.surfaceView));
