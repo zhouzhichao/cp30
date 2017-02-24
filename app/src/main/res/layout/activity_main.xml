@@ -9,7 +9,95 @@
         android:id="@+id/rlMain"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/lb_action_text_color">
+        android:background="@drawable/basck">
+        <TextView
+            android:id="@+id/tvCountTimer"
+            android:textSize="100sp"
+            android:visibility="gone"
+            tools:text="30"
+            android:layout_centerInParent="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:text="九盛中彩开奖游戏"
+            android:textSize="20sp"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="40dp"
+            android:textColor="@color/lb_speech_orb_recording"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:id="@+id/tvCurrentTime"
+            android:textSize="20sp"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="20dp"
+            android:layout_marginTop="40dp"
+            android:textColor="@color/lb_view_dim_mask_color"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:id="@+id/tvCurrentNum"
+            android:layout_below="@id/tvCurrentTime"
+            android:textSize="13sp"
+            android:text="XXXXX彩票XXX期"
+            android:layout_marginLeft="100dp"
+            android:layout_marginTop="10dp"
+            android:textColor="@android:color/background_dark"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:id="@+id/tvCurrentResult"
+            android:layout_below="@id/tvCurrentNum"
+            android:textSize="13sp"
+            android:text="开奖结果为   6"
+            android:layout_marginLeft="100dp"
+            android:layout_marginTop="10dp"
+            android:textColor="@android:color/background_dark"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:id="@+id/tvNextTime"
+            android:layout_below="@id/tvCurrentTime"
+            android:text="下一期开奖时间     16:30"
+            android:textSize="16sp"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="50dp"
+            android:layout_marginTop="20dp"
+            android:textColor="@android:color/background_dark"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <LinearLayout
+            android:layout_below="@id/tvCurrentResult"
+            android:layout_marginLeft="100dp"
+            android:layout_marginRight="100dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:layout_weight="1"
+                android:textSize="13sp"
+                android:gravity="center"
+                android:text="购彩人数  100000人"
+                android:textColor="@android:color/background_dark"
+
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:layout_weight="1"
+                android:textSize="13sp"
+                android:gravity="center"
+                android:text="中奖人数  1000人"
+                android:textColor="@android:color/background_dark"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:layout_weight="1"
+                android:textSize="13sp"
+                android:gravity="center"
+                android:text="奖池金额  100000元"
+                android:textColor="@android:color/background_dark"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
 
     </RelativeLayout>
     <RelativeLayout

@@ -11,7 +11,7 @@ import java.io.File;
  */
 public class FileUtil {
     //sdcard下app目录
-    public static final File SDCARD_APP_DIR = getSdcardFileDir("Trangol");
+    public static final File SDCARD_APP_DIR = getSdcardFileDir("JiuSheng/Game");
 
     private FileUtil() {
     }

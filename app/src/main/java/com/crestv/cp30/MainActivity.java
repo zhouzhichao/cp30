@@ -14,6 +14,7 @@
 
 package com.crestv.cp30;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -21,6 +22,10 @@ import android.content.res.Configuration;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.Message;
+import android.text.format.DateFormat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -33,6 +38,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.crestv.cp30.activity.MyReceiver;
+import com.crestv.cp30.util.GetFilesUtil;
 import com.crestv.cp30.util.L;
 import com.crestv.cp30.util.TRequestQueue;
 import com.crestv.cp30.view.CircleProgressBarView;
@@ -43,6 +49,7 @@ import com.yanzhenjie.permission.PermissionListener;
 
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -71,6 +78,25 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
     private String filePath;
     private int w, h;
     private RelativeLayout rlMain;
+    private TextView tvCurrentTime;
+
+    private Handler mHandler = new Handler() {
+        @Override
+        public void handleMessage (Message msg) {
+            super.handleMessage(msg);
+            switch (msg.what) {
+                case 0:
+                    long sysTime = System.currentTimeMillis();
+                    CharSequence sysTimeStr = DateFormat.format("hh:mm:ss", sysTime);
+                    tvCurrentTime.setText(sysTimeStr);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+    };
+    private TextView tvCountTimer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,6 +105,11 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
         Intent intent=getIntent();
         versionCode=intent.getIntExtra("versionCode",0);
         initId();
+        checkVersion();
+        initListener();
+    }
+
+    private void checkVersion() {
         if (versionCode==0){
             /*Intent intent1=new Intent(this, DownLoadActivity.class);
             intent1.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -87,15 +118,14 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
             rlDownLoad.setVisibility(View.VISIBLE);
             isMainActvity=false;
             filePathList=new ArrayList<>();
-            filePathList.add("http://file.86580.cn:9001/syptapp/cers/LionHeart.mp4");
-            filePathList.add("http://file.86580.cn:9001/syptapp/cers/LionHeart01.mp4");
+            filePathList.add("http://file.86580.cn:9001/syptapp/cers/LionHeart02.mp4");
+            filePathList.add("http://file.86580.cn:9001/syptapp/cers/LionHeart04.mp4");
             initDownLoad();
             L.e("==","==");
 
         }else {
 
         }
-        initListener();
     }
 
     private void initDownLoad() {
@@ -116,6 +146,8 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
     }
 
     private void initId() {
+        tvCurrentTime = ((TextView) findViewById(R.id.tvCurrentTime));
+        tvCountTimer = ((TextView) findViewById(R.id.tvCountTimer));
         rlDownLoad = ((RelativeLayout) findViewById(R.id.activity_down_load));
         rlMain = ((RelativeLayout) findViewById(R.id.rlMain));
         circleProgressBar = ((CircleProgressBarView) findViewById(R.id.circleProgressBar));
@@ -141,6 +173,23 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
             mediaPlayer = new MediaPlayer();
         }
 
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                do {
+                    try {
+                        Thread.sleep(1000);
+                        Message msg = new Message();
+                        msg.what = 0;
+                        mHandler.sendMessage(msg);
+                        }
+                    catch (InterruptedException e) {
+                        e.printStackTrace();
+                        }
+                    } while(true);
+            }
+        }).start();
+
     }
 
     @Override
@@ -158,10 +207,42 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
                     intent.putExtra("filePath", filePath);
                     intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);*/
-                    rlMain.setVisibility(View.GONE);
-                    rlSurfaceView.setVisibility(View.VISIBLE);
-                    playVideo(0,filePath);
-                    isMainActvity = false;
+                    String firstChar=filePath.substring(0,1);
+                    String otherString=filePath.substring(1,filePath.length());
+                    L.e("==firstChar","=="+firstChar);
+                    L.e("==otherString","=="+otherString);
+                    if (firstChar.equals("0")){
+                        new CountDownTimer(30*1000,1000) {
+                            @Override
+                            public void onTick(long millisUntilFinished) {
+                                tvCountTimer.setVisibility(View.VISIBLE);
+                                tvCountTimer.setText(String.valueOf(millisUntilFinished/1000));
+                            }
+
+                            @Override
+                            public void onFinish() {
+
+                            }
+                        }.start();
+                    }else if (firstChar.equals("1")){
+                        List<String> listFiles=new ArrayList<String>();
+                        listFiles.add("LionHeart02.mp4");
+                        listFiles.add("LionHeart04.mp4");
+                        File []filenames= GetFilesUtil.getFiles(listFiles);
+                        for (int i = 0; i < filenames.length; i++) {//删除
+                            //File file = new File (filenames[i]);
+                            if (filenames[i].exists()) {
+                                filenames[i].delete();
+                            }
+                        }
+                    }else if (firstChar.equals("2")){
+                        checkVersion();
+                    }else {
+                        rlMain.setVisibility(View.GONE);
+                        rlSurfaceView.setVisibility(View.VISIBLE);
+                        playVideo(0, filePath);
+                        isMainActvity = false;
+                    }
                 }
             }
         });
@@ -323,6 +404,7 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
         super.onDestroy();
         TRequestQueue.cancelAllQueue();
         mediaPlayer.release();
+        isMainActvity=false;
     }
 
     //******************************************************************播放视频

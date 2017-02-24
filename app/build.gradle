@@ -24,6 +24,10 @@ android {
             jniLibs.srcDirs = ['libs']
         }
     }
+    /*出现错误的原因是：Androidstudio严格审查png图片，就是png没有达到Androidstudio的要求*/
+    aaptOptions.cruncherEnabled = false
+    aaptOptions.useNewCruncher = false
+
 }
 
 dependencies {
