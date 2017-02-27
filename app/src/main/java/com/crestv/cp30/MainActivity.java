@@ -128,7 +128,6 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
         public void onStart(int what) {
 
         }
-
         @Override
         public void onSucceed(int what, Response<String> response) {
             if (what==0x101){
