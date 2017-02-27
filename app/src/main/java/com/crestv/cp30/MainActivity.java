@@ -37,13 +37,20 @@ import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.crestv.cp30.Enity.Version;
 import com.crestv.cp30.activity.MyReceiver;
+import com.crestv.cp30.dao.Config;
+import com.crestv.cp30.util.AppUtil;
 import com.crestv.cp30.util.GetFilesUtil;
 import com.crestv.cp30.util.L;
 import com.crestv.cp30.util.TRequestQueue;
+import com.crestv.cp30.util.UpdateAppUtil;
 import com.crestv.cp30.view.CircleProgressBarView;
+import com.google.gson.Gson;
 import com.yanzhenjie.nohttp.Headers;
 import com.yanzhenjie.nohttp.download.DownloadListener;
+import com.yanzhenjie.nohttp.rest.OnResponseListener;
+import com.yanzhenjie.nohttp.rest.Response;
 import com.yanzhenjie.permission.AndPermission;
 import com.yanzhenjie.permission.PermissionListener;
 
@@ -80,6 +87,9 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
     private RelativeLayout rlMain;
     private TextView tvCurrentTime;
 
+    private int newVerCode = 0;
+    private String newVerName = "";
+
     private Handler mHandler = new Handler() {
         @Override
         public void handleMessage (Message msg) {
@@ -107,8 +117,75 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
         initId();
         checkVersion();
         initListener();
+        checkAppVersion();
     }
 
+    private void checkAppVersion() {
+        TRequestQueue.getInstance().addStrRespGet(0x101, Config.UPDATE_VERJSON, mOnResponseListener);
+    }
+    OnResponseListener<String> mOnResponseListener=new OnResponseListener<String>() {
+        @Override
+        public void onStart(int what) {
+
+        }
+
+        @Override
+        public void onSucceed(int what, Response<String> response) {
+            if (what==0x101){
+                try {
+                    String result = response.get();
+                    result=result.substring(0,result.lastIndexOf("}")+1);
+                    L.e(result);
+                    Gson gson = new Gson();
+                    Version model = gson.fromJson(result, Version.class);
+                    int status = model.getStatus();
+                    if (status == 1) {
+                        newVerCode = model.getData().get(0).getVerCode();
+                        newVerName = model.getData().get(0).getVerName();
+
+                        if (newVerCode > AppUtil.getVersionCode(getApplicationContext())) {
+                            doNewVersionUpdate();
+                        }
+                    } else {
+                        newVerCode = -1;
+                        newVerName = "";
+                    }
+                } catch (Exception ex) {
+                    newVerCode = -1;
+                    newVerName = "";
+                    ex.printStackTrace();
+                }
+            }
+        }
+
+        @Override
+        public void onFailed(int what, Response<String> response) {
+
+        }
+
+        @Override
+        public void onFinish(int what) {
+
+        }
+    };
+    private void doNewVersionUpdate() {
+        int verCode = AppUtil.getVersionCode(this);
+        String verName = AppUtil.getVersionName(this);
+
+
+        StringBuffer sb = new StringBuffer();
+        sb.append("当前版本:");
+        sb.append(verName);
+        sb.append(" Code:");
+        sb.append(verCode);
+        sb.append(", 发现新版本:");
+        sb.append(newVerName);
+        sb.append(" Code:");
+        sb.append(newVerCode);
+        sb.append(", 是否更新?");
+        UpdateAppUtil.normalUpdate(this,"九盛中彩游戏App", Config.APK_DOWNLOAD_URL, sb.toString());
+
+    }
     private void checkVersion() {
         if (versionCode==0){
             /*Intent intent1=new Intent(this, DownLoadActivity.class);

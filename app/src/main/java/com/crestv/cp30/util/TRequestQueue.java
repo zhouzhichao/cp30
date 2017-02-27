@@ -4,12 +4,18 @@ package com.crestv.cp30.util;
 import android.util.Log;
 
 import com.yanzhenjie.nohttp.NoHttp;
+import com.yanzhenjie.nohttp.RequestMethod;
 import com.yanzhenjie.nohttp.download.DownloadListener;
 import com.yanzhenjie.nohttp.download.DownloadQueue;
 import com.yanzhenjie.nohttp.download.DownloadRequest;
+import com.yanzhenjie.nohttp.rest.OnResponseListener;
+import com.yanzhenjie.nohttp.rest.Request;
 import com.yanzhenjie.nohttp.rest.RequestQueue;
 
 import org.json.JSONObject;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
 
 /**
  *
@@ -64,7 +70,94 @@ public class TRequestQueue {
         downloadQueue.add(what, downLoadRequest, downloadListener);
     }
 
+    public <T> void addStrResp(int what, String url, JSONObject object, OnResponseListener<String> responseListener) {
+        Request<String> request = NoHttp.createStringRequest(UrlR.API_URL + url, RequestMethod.POST);
 
+        if (UrlR.API_URL.contains("https")) {
+            SSLContext sslContext = SSLContextUtil.getDefaultSLLContext();// 方法见上文
+            if (sslContext != null) {
+                SSLSocketFactory socketFactory = sslContext.getSocketFactory();
+                request.setSSLSocketFactory(socketFactory);
+                request.setHostnameVerifier(SSLContextUtil.HOSTNAME_VERIFIER);// 见上文
+            }
+        }
+
+        long ts = System.currentTimeMillis();
+        //String pk = AES.Encrypt(String.valueOf(ts));
+        try {
+            object.put("ts", ts);
+            //object.put("pk", pk);
+            //object.put("token", MyApplication.getToken());
+            L.e(object.toString() + "  " + url);
+            request.setDefineRequestBodyForJson(object);
+            mRequestQueue.add(what, request, responseListener);
+        } catch (Exception ex) {
+            L.e(ex);
+        }
+    }
+
+    public <T> void addStrRespWithOutToken(int what, String url, JSONObject object, OnResponseListener<String> responseListener) {
+        Request<String> request = NoHttp.createStringRequest(UrlR.API_URL + url, RequestMethod.POST);
+        if (UrlR.API_URL.contains("https")) {
+            SSLContext sslContext = SSLContextUtil.getDefaultSLLContext();// 方法见上文
+            if (sslContext != null) {
+                SSLSocketFactory socketFactory = sslContext.getSocketFactory();
+                request.setSSLSocketFactory(socketFactory);
+                request.setHostnameVerifier(SSLContextUtil.HOSTNAME_VERIFIER);// 见上文
+            }
+        }
+        long ts = System.currentTimeMillis();
+        //String pk = AES.Encrypt(String.valueOf(ts));
+        try {
+            object.put("ts", ts);
+            //object.put("pk", pk);
+            L.e(object.toString() + "  " + url);
+            request.setDefineRequestBodyForJson(object);
+            mRequestQueue.add(what, request, responseListener);
+        } catch (Exception ex) {
+            L.e(ex);
+        }
+    }
+
+    public <T> void addStrResp(int what, String url, OnResponseListener<String> responseListener) {
+        Request<String> request = NoHttp.createStringRequest(UrlR.API_URL + url, RequestMethod.POST);
+        if (UrlR.API_URL.contains("https")) {
+            SSLContext sslContext = SSLContextUtil.getDefaultSLLContext();// 方法见上文
+            if (sslContext != null) {
+                SSLSocketFactory socketFactory = sslContext.getSocketFactory();
+                request.setSSLSocketFactory(socketFactory);
+                request.setHostnameVerifier(SSLContextUtil.HOSTNAME_VERIFIER);// 见上文
+            }
+        }
+        L.e(url);
+        try {
+
+//            request.setDefineRequestBodyForJson(object);
+            mRequestQueue.add(what, request, responseListener);
+        } catch (Exception ex) {
+            L.e(ex);
+        }
+    }
+
+    public <T> void addStrRespGet(int what, String url, OnResponseListener<String> responseListener) {
+        Request<String> request = NoHttp.createStringRequest(UrlR.API_URL + url + "?" + System.currentTimeMillis(), RequestMethod.GET);
+        if (UrlR.API_URL.contains("https")) {
+            SSLContext sslContext = SSLContextUtil.getDefaultSLLContext();// 方法见上文
+            if (sslContext != null) {
+                SSLSocketFactory socketFactory = sslContext.getSocketFactory();
+                request.setSSLSocketFactory(socketFactory);
+                request.setHostnameVerifier(SSLContextUtil.HOSTNAME_VERIFIER);// 见上文
+            }
+        }
+        L.e(url);
+        try {
+
+//            request.setDefineRequestBodyForJson(object);
+            mRequestQueue.add(what, request, responseListener);
+        } catch (Exception ex) {
+            L.e(ex);
+        }
+    }
 
 
 }
