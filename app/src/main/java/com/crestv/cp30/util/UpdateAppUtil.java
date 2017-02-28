@@ -16,7 +16,7 @@ import java.util.List;
 public class UpdateAppUtil {
     //app更新
 
-    private static AlertDialog.Builder mDialog;
+
 
     /**
      * 强制更新
@@ -25,7 +25,7 @@ public class UpdateAppUtil {
      * @param downUrl
      * @param updateinfo
      */
-    public static   void forceUpdate(final Context context, final String appName, final String downUrl, final String updateinfo) {
+    public static   void forceUpdate(AlertDialog.Builder mDialog,final Context context, final String appName, final String downUrl, final String updateinfo) {
         mDialog = new AlertDialog.Builder(context);
         mDialog.setTitle(appName + "又更新咯！");
         mDialog.setMessage(updateinfo);
@@ -49,8 +49,7 @@ public class UpdateAppUtil {
      * @param downUrl
      * @param updateinfo
      */
-    public static void normalUpdate(final Context context, final String appName, final String downUrl, final String updateinfo) {
-        mDialog = new AlertDialog.Builder(context);
+    public static void normalUpdate(AlertDialog.Builder mDialog,final Context context, final String appName, final String downUrl, final String updateinfo) {
         mDialog.setTitle(appName + "又更新咯！");
         mDialog.setMessage(updateinfo);
         mDialog.setPositiveButton("立即更新", new DialogInterface.OnClickListener() {
@@ -74,7 +73,7 @@ public class UpdateAppUtil {
     /**
      * 无需跟新
      */
-    public void noneUpdate(Context context) {
+    public void noneUpdate(AlertDialog.Builder mDialog,Context context) {
         mDialog = new AlertDialog.Builder(context);
         mDialog.setTitle("版本更新")
                 .setMessage("当前已是最新版本无需更新")

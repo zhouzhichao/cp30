@@ -14,9 +14,11 @@
 
 package com.crestv.cp30;
 
-import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.media.MediaPlayer;
@@ -41,12 +43,14 @@ import com.crestv.cp30.Enity.Version;
 import com.crestv.cp30.activity.MyReceiver;
 import com.crestv.cp30.dao.Config;
 import com.crestv.cp30.util.AppUtil;
+import com.crestv.cp30.util.GetAppId;
 import com.crestv.cp30.util.GetFilesUtil;
 import com.crestv.cp30.util.L;
 import com.crestv.cp30.util.TRequestQueue;
 import com.crestv.cp30.util.UpdateAppUtil;
 import com.crestv.cp30.view.CircleProgressBarView;
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.yanzhenjie.nohttp.Headers;
 import com.yanzhenjie.nohttp.download.DownloadListener;
 import com.yanzhenjie.nohttp.rest.OnResponseListener;
@@ -54,6 +58,7 @@ import com.yanzhenjie.nohttp.rest.Response;
 import com.yanzhenjie.permission.AndPermission;
 import com.yanzhenjie.permission.PermissionListener;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -90,6 +95,8 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
     private int newVerCode = 0;
     private String newVerName = "";
 
+    private SharedPreferences mSharedPreferences;
+    private AlertDialog.Builder mDialog;
     private Handler mHandler = new Handler() {
         @Override
         public void handleMessage (Message msg) {
@@ -109,13 +116,28 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
     private TextView tvCountTimer;
 
     @Override
+    protected void onStart() {
+        super.onStart();
+        if (AndPermission.hasPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+
+        } else {
+            // 申请权限。
+            AndPermission.with(this)
+                    .requestCode(100)
+                    .permission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE, android.Manifest.permission.READ_EXTERNAL_STORAGE)
+                    .send();
+
+        }
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        // 先判断是否有权限。
         Intent intent=getIntent();
         versionCode=intent.getIntExtra("versionCode",0);
         initId();
-        checkVersion();
         initListener();
         checkAppVersion();
     }
@@ -130,6 +152,31 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
         }
         @Override
         public void onSucceed(int what, Response<String> response) {
+            if (what==0x100){
+                try {
+                    String result = response.get();
+                    result=result.substring(0,result.lastIndexOf("}")+1);
+                    L.e(result);
+                    Gson gson = new Gson();
+                    Version model = gson.fromJson(result, Version.class);
+                    int status = model.getStatus();
+                    if (status == 1) {
+                        newVerCode = model.getData().get(0).getVerCode();
+                        newVerName = model.getData().get(0).getVerName();
+                        filePathList=new ArrayList<>();
+                        filePathList.add("http://file.86580.cn:9001/syptapp/cers/LionHeart02.mp4");
+                        filePathList.add("http://file.86580.cn:9001/syptapp/cers/LionHeart04.mp4");
+                        if (newVerCode > AppUtil.getVersionCode(getApplicationContext())) {
+                            downLoadVideo(filePathList);//下载跟新视频
+                        }
+                    } else {
+                        newVerCode = -1;
+                        newVerName = "";
+                    }
+                } catch (JsonSyntaxException e) {
+                    e.printStackTrace();
+                }
+            } else
             if (what==0x101){
                 try {
                     String result = response.get();
@@ -144,15 +191,19 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
 
                         if (newVerCode > AppUtil.getVersionCode(getApplicationContext())) {
                             doNewVersionUpdate();
+                        }else {
+                            checkVersion();
                         }
                     } else {
                         newVerCode = -1;
                         newVerName = "";
+                        checkVersion();
                     }
                 } catch (Exception ex) {
                     newVerCode = -1;
                     newVerName = "";
                     ex.printStackTrace();
+                    checkVersion();
                 }
             }
         }
@@ -182,46 +233,51 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
         sb.append(" Code:");
         sb.append(newVerCode);
         sb.append(", 是否更新?");
-        UpdateAppUtil.normalUpdate(this,"九盛中彩游戏App", Config.APK_DOWNLOAD_URL, sb.toString());
+        UpdateAppUtil.normalUpdate(mDialog,this,"九盛中彩游戏App", Config.APK_DOWNLOAD_URL, sb.toString());
 
     }
     private void checkVersion() {
-        if (versionCode==0){
-            /*Intent intent1=new Intent(this, DownLoadActivity.class);
-            intent1.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent1);*/
-            rlMain.setVisibility(View.GONE);
-            rlDownLoad.setVisibility(View.VISIBLE);
-            isMainActvity=false;
-            filePathList=new ArrayList<>();
-            filePathList.add("http://file.86580.cn:9001/syptapp/cers/LionHeart02.mp4");
-            filePathList.add("http://file.86580.cn:9001/syptapp/cers/LionHeart04.mp4");
-            initDownLoad();
-            L.e("==","==");
-
-        }else {
-
+        int gameVersion=mSharedPreferences.getInt("gameVersion",0);
+        int adVersion=mSharedPreferences.getInt("adVersion",0);
+        JSONObject jsonObject=new JSONObject();
+        try {
+            jsonObject.put("gameVerCode",gameVersion);
+            jsonObject.put("adVerCode",adVersion);
+            jsonObject.put("mac", GetAppId.getDeviceId(this));
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
+        TRequestQueue.getInstance().addStrRespGet(0x100, Config.UPDATE_VERJSON, mOnResponseListener);
+
     }
 
-    private void initDownLoad() {
+    private void downLoadVideo(List<String> filePathList) {
+         /*Intent intent1=new Intent(this, DownLoadActivity.class);
+            intent1.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent1);*/
+        rlMain.setVisibility(View.GONE);
+        rlDownLoad.setVisibility(View.VISIBLE);
+        isMainActvity=false;
         num=0;
         errorCount=0;
         // 先判断是否有权限。
-        if (AndPermission.hasPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+        if (AndPermission.hasPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
             // 有权限，直接do anything.
             TRequestQueue.getDownLoadInstance().noHttpDownLoadFile(0x103,filePathList.get(num) , new JSONObject(), downloadListener);
         } else {
             // 申请权限。
             AndPermission.with(this)
                     .requestCode(100)
-                    .permission(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE)
+                    .permission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE, android.Manifest.permission.READ_EXTERNAL_STORAGE)
                     .send();
 
         }
     }
 
+
     private void initId() {
+        mDialog = new AlertDialog.Builder(this);
+        mSharedPreferences = getSharedPreferences("videoVersionInfo", MODE_PRIVATE);
         tvCurrentTime = ((TextView) findViewById(R.id.tvCurrentTime));
         tvCountTimer = ((TextView) findViewById(R.id.tvCountTimer));
         rlDownLoad = ((RelativeLayout) findViewById(R.id.activity_down_load));
@@ -275,6 +331,7 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
     }
 
     private void initListener() {
+        //接口回调，获得极光推送自定义推送内容
         MyReceiver.setNotifyListener(new MyReceiver.NotifyListener() {
             @Override
             public void notifyListener(String filePath) {
@@ -320,6 +377,13 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
                         isMainActvity = false;
                     }
                 }
+            }
+        });
+
+        mDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialog) {
+                checkVersion();//视频更新
             }
         });
 
@@ -441,7 +505,7 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
             // 权限申请成功回调。
             if (requestCode == 100) {
                 // TODO 相应代码。
-                TRequestQueue.getDownLoadInstance().noHttpDownLoadFile(0x103, filePathList.get(num), new JSONObject(), downloadListener);
+                //TRequestQueue.getDownLoadInstance().noHttpDownLoadFile(0x103, filePathList.get(num), new JSONObject(), downloadListener);
 
             } else if (requestCode == 101) {
                 // TODO 相应代码。
@@ -471,6 +535,14 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
                 // settingService.execute();
                 // 你的dialog点击了取消调用：
                 // settingService.cancel();
+                try {
+                    Thread.sleep(3000);
+                    finish();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }else {
+                finish();
             }
         }
     };
