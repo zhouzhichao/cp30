@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/transparent">
+    <TextView
+        android:id="@+id/tvName"
+        android:text="李四"
+        android:textColor="@color/lb_playback_controls_background_dark"
+        android:gravity="center"
+        android:layout_weight="1"
+        android:textSize="13sp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+    <TextView
+        android:id="@+id/tvMoney"
+        android:text="李四"
+        android:textColor="@color/lb_playback_controls_background_dark"
+        android:gravity="center"
+        android:layout_weight="1"
+        android:textSize="13sp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>

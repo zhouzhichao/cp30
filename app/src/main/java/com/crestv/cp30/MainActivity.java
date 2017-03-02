@@ -17,10 +17,10 @@ package com.crestv.cp30;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.database.Cursor;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
@@ -35,14 +35,18 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.crestv.cp30.Enity.PrizeInformationEnity;
 import com.crestv.cp30.Enity.Version;
 import com.crestv.cp30.activity.MyReceiver;
+import com.crestv.cp30.adapter.PrizeInformationAdapter;
 import com.crestv.cp30.dao.Config;
 import com.crestv.cp30.util.AppUtil;
+import com.crestv.cp30.util.DatabaseUtil;
 import com.crestv.cp30.util.GetAppId;
 import com.crestv.cp30.util.GetFilesUtil;
 import com.crestv.cp30.util.L;
@@ -70,7 +74,6 @@ import java.util.List;
  * MainActivity class that loads MainFragment
  */
 public class MainActivity extends Activity  implements SurfaceHolder.Callback, View.OnClickListener{
-    private int versionCode=0;
     private boolean isMainActvity;
     private CircleProgressBarView circleProgressBar;
     private TextView tv;
@@ -94,6 +97,10 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
 
     private int newVerCode = 0;
     private String newVerName = "";
+    private Gson gson=new Gson();
+    private PrizeInformationEnity.DataBean dataBean;
+    private List<PrizeInformationEnity.DataBean.ListHeroBean> listHeroBeanList;
+    private PrizeInformationAdapter prizeInformationAdapter;
 
     private SharedPreferences mSharedPreferences;
     private AlertDialog.Builder mDialog;
@@ -114,10 +121,12 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
         }
     };
     private TextView tvCountTimer;
+    private ListView listViewPrize;
 
     @Override
     protected void onStart() {
         super.onStart();
+        // 先判断是否有权限。
         if (AndPermission.hasPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
 
         } else {
@@ -134,12 +143,39 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        // 先判断是否有权限。
-        Intent intent=getIntent();
-        versionCode=intent.getIntExtra("versionCode",0);
         initId();
         initListener();
         checkAppVersion();
+        initPrizeInformation();
+        //插入
+        DatabaseUtil dbUtil = new DatabaseUtil(this);
+        dbUtil.open();
+        dbUtil.createStudent("video01.mp4", "10100","10200",0);
+        //查询
+        Cursor cursor = dbUtil.fetchAllStudents();
+        if(cursor != null){
+            while(cursor.moveToNext()){
+                Log.e("Student==", "==Name: " + cursor.getString(1) +
+                        " start== " + cursor.getString(2)+"id=="+cursor.getString(0));
+            }
+        }
+        dbUtil.close();
+
+
+    }
+
+    private void initPrizeInformation() {
+        JSONObject jsonObject=new JSONObject();
+        try {
+            jsonObject.put("page",1);
+            jsonObject.put("perpage", 10);
+            jsonObject.put("pk", "string");
+            jsonObject.put("token","5Wv3iYGKDshXrKNHlrCZEg==");
+            jsonObject.put("ts", 0);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        TRequestQueue.getInstance().addStrResp(0x104, "shopcertificate/HeroRankingList",jsonObject, mOnResponseListener);
     }
 
     private void checkAppVersion() {
@@ -167,7 +203,7 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
                         filePathList.add("http://file.86580.cn:9001/syptapp/cers/LionHeart02.mp4");
                         filePathList.add("http://file.86580.cn:9001/syptapp/cers/LionHeart04.mp4");
                         if (newVerCode > AppUtil.getVersionCode(getApplicationContext())) {
-                            downLoadVideo(filePathList);//下载跟新视频
+                            downLoadVideo(filePathList);//下载更新视频
                         }
                     } else {
                         newVerCode = -1;
@@ -205,7 +241,20 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
                     ex.printStackTrace();
                     checkVersion();
                 }
-            }
+            }else
+                if (what==0x104){
+                    String result=response.get();
+                    L.e("==reslt","=="+result);
+                    try {
+                        PrizeInformationEnity prizeInformationEnity=gson.fromJson(result,PrizeInformationEnity.class);
+                        listHeroBeanList.clear();
+                        listHeroBeanList.addAll(prizeInformationEnity.getData().getListHero());
+                        prizeInformationAdapter.notifyDataSetChanged();
+                    } catch (JsonSyntaxException e) {
+                        e.printStackTrace();
+                    }
+
+                }
         }
 
         @Override
@@ -277,6 +326,7 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
 
     private void initId() {
         mDialog = new AlertDialog.Builder(this);
+        listViewPrize = ((ListView) findViewById(R.id.listViewPrize));
         mSharedPreferences = getSharedPreferences("videoVersionInfo", MODE_PRIVATE);
         tvCurrentTime = ((TextView) findViewById(R.id.tvCurrentTime));
         tvCountTimer = ((TextView) findViewById(R.id.tvCountTimer));
@@ -322,6 +372,9 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
             }
         }).start();
 
+        listHeroBeanList=new ArrayList<>();
+        prizeInformationAdapter=new PrizeInformationAdapter(this,listHeroBeanList,R.layout.prize_information_item);
+        listViewPrize.setAdapter(prizeInformationAdapter);
     }
 
     @Override
@@ -482,6 +535,7 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
                 rlDownLoad.setVisibility(View.GONE);
                 rlMain.setVisibility(View.VISIBLE);
                 isMainActvity=true;
+                initPrizeInformation();
             }
 
         }

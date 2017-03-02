@@ -85,7 +85,7 @@ public class TRequestQueue {
         long ts = System.currentTimeMillis();
         //String pk = AES.Encrypt(String.valueOf(ts));
         try {
-            object.put("ts", ts);
+            //object.put("ts", ts);
             //object.put("pk", pk);
             //object.put("token", MyApplication.getToken());
             L.e(object.toString() + "  " + url);
