@@ -40,6 +40,7 @@ import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.crestv.cp30.Enity.PlayRecordEnity;
 import com.crestv.cp30.Enity.PrizeInformationEnity;
 import com.crestv.cp30.Enity.Version;
 import com.crestv.cp30.activity.MyReceiver;
@@ -102,6 +103,13 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
     private List<PrizeInformationEnity.DataBean.ListHeroBean> listHeroBeanList;
     private PrizeInformationAdapter prizeInformationAdapter;
 
+    private String startPlayTime;
+    private String endPlayTime;
+    private String uploadState;
+
+    private List<PlayRecordEnity> playRecordEnityList;
+    private int recordNum;
+
     private SharedPreferences mSharedPreferences;
     private AlertDialog.Builder mDialog;
     private Handler mHandler = new Handler() {
@@ -123,6 +131,7 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
     private TextView tvCountTimer;
     private ListView listViewPrize;
 
+    private  DatabaseUtil dbUtil;
     @Override
     protected void onStart() {
         super.onStart();
@@ -148,19 +157,8 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
         checkAppVersion();
         initPrizeInformation();
         //插入
-        DatabaseUtil dbUtil = new DatabaseUtil(this);
+        dbUtil = new DatabaseUtil(this);
         dbUtil.open();
-        dbUtil.createStudent("video01.mp4", "10100","10200",0);
-        //查询
-        Cursor cursor = dbUtil.fetchAllStudents();
-        if(cursor != null){
-            while(cursor.moveToNext()){
-                Log.e("Student==", "==Name: " + cursor.getString(1) +
-                        " start== " + cursor.getString(2)+"id=="+cursor.getString(0));
-            }
-        }
-        dbUtil.close();
-
 
     }
 
@@ -242,24 +240,57 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
                     checkVersion();
                 }
             }else
-                if (what==0x104){
-                    String result=response.get();
-                    L.e("==reslt","=="+result);
-                    try {
-                        PrizeInformationEnity prizeInformationEnity=gson.fromJson(result,PrizeInformationEnity.class);
-                        listHeroBeanList.clear();
-                        listHeroBeanList.addAll(prizeInformationEnity.getData().getListHero());
-                        prizeInformationAdapter.notifyDataSetChanged();
-                    } catch (JsonSyntaxException e) {
-                        e.printStackTrace();
-                    }
+            if (what==0x104){
+                String result=response.get();
+                L.e("==reslt","=="+result);
+                try {
+                    PrizeInformationEnity prizeInformationEnity=gson.fromJson(result,PrizeInformationEnity.class);
+                    listHeroBeanList.clear();
+                    listHeroBeanList.addAll(prizeInformationEnity.getData().getListHero());
+                    prizeInformationAdapter.notifyDataSetChanged();
+                } catch (JsonSyntaxException e) {
+                    e.printStackTrace();
+                }
 
+            }else
+                if (what==0x105){
+                    //上传播放记录，上传成功后删除数据库中的记录
+                    if (recordNum<playRecordEnityList.size()){
+                        JSONObject jsonObject = new JSONObject();
+                        try {
+                            jsonObject.put("filePath", playRecordEnityList.get(recordNum).getFileName());
+                            jsonObject.put("startPlayTime", playRecordEnityList.get(recordNum).getStartPlayTime());
+                            jsonObject.put("endPlayTime", playRecordEnityList.get(recordNum).getEndPlayTime());
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        String _id=playRecordEnityList.get(recordNum-1).getId();
+                        dbUtil.deleteSingleRecord(Long.valueOf(_id));
+                        recordNum++;
+                        TRequestQueue.getInstance().addStrResp(0x105, "baidu", jsonObject, mOnResponseListener);
+                    }
                 }
         }
 
         @Override
         public void onFailed(int what, Response<String> response) {
-
+            if (what==0x105){
+                //上传播放记录失败，不删除记录
+                if (recordNum<playRecordEnityList.size()){
+                    JSONObject jsonObject = new JSONObject();
+                    try {
+                        jsonObject.put("filePath", playRecordEnityList.get(recordNum).getFileName());
+                        jsonObject.put("startPlayTime", playRecordEnityList.get(recordNum).getStartPlayTime());
+                        jsonObject.put("endPlayTime", playRecordEnityList.get(recordNum).getEndPlayTime());
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    L.e("==fi","=="+playRecordEnityList.get(recordNum).getFileName());
+                    recordNum++;
+                    TRequestQueue.getInstance().addStrResp(0x105, "baidu", jsonObject, mOnResponseListener);
+                }
+                L.e("==endPlayTime","=="+playRecordEnityList.get(recordNum).getEndPlayTime());
+            }
         }
 
         @Override
@@ -267,6 +298,7 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
 
         }
     };
+    //当前版本检测
     private void doNewVersionUpdate() {
         int verCode = AppUtil.getVersionCode(this);
         String verName = AppUtil.getVersionName(this);
@@ -285,6 +317,7 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
         UpdateAppUtil.normalUpdate(mDialog,this,"九盛中彩游戏App", Config.APK_DOWNLOAD_URL, sb.toString());
 
     }
+    //检测视频版本
     private void checkVersion() {
         int gameVersion=mSharedPreferences.getInt("gameVersion",0);
         int adVersion=mSharedPreferences.getInt("adVersion",0);
@@ -299,7 +332,7 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
         TRequestQueue.getInstance().addStrRespGet(0x100, Config.UPDATE_VERJSON, mOnResponseListener);
 
     }
-
+    //下载视频
     private void downLoadVideo(List<String> filePathList) {
          /*Intent intent1=new Intent(this, DownLoadActivity.class);
             intent1.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -473,7 +506,14 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
                 return false;
             }
         });
-
+        //视频准备播放时的监听
+        mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+            @Override
+            public void onPrepared(MediaPlayer mp) {
+                startPlayTime=String.valueOf(System.currentTimeMillis());
+            }
+        });
+        //视频播放完成的监听
         mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
@@ -487,6 +527,37 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
                 rlSurfaceView.setVisibility(View.GONE);
                 rlMain.setVisibility(View.VISIBLE);
                 isMainActvity=true;
+
+                endPlayTime=String.valueOf(System.currentTimeMillis());
+                dbUtil.createRecord(filePath, startPlayTime,endPlayTime,0);
+                playRecordEnityList=new ArrayList<PlayRecordEnity>();
+                //查询
+                Cursor cursor = dbUtil.fetchAllRecord();
+                recordNum=0;
+                if(cursor != null){
+                    while(cursor.moveToNext()){
+                        Log.e("Student==", "==Name: " + cursor.getString(1) +
+                                " start== " + cursor.getString(2)+"id=="+cursor.getString(0));
+                        PlayRecordEnity playRecordEnity=new PlayRecordEnity();
+                        playRecordEnity.setId(cursor.getString(0));
+                        playRecordEnity.setFileName(cursor.getString(1));
+                        playRecordEnity.setStartPlayTime(cursor.getString(2));
+                        playRecordEnity.setEndPlayTime(cursor.getString(3));
+                        playRecordEnityList.add(playRecordEnity);
+                    }
+                }
+                if (playRecordEnityList.size()>0) {
+                    JSONObject jsonObject = new JSONObject();
+                    try {
+                        jsonObject.put("filePath", playRecordEnityList.get(recordNum).getFileName());
+                        jsonObject.put("startPlayTime", playRecordEnityList.get(recordNum).getStartPlayTime());
+                        jsonObject.put("endPlayTime", playRecordEnityList.get(recordNum).getEndPlayTime());
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    recordNum++;
+                    TRequestQueue.getInstance().addStrResp(0x105, "baidu", jsonObject, mOnResponseListener);
+                }
 
             }
         });
@@ -607,6 +678,7 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
         TRequestQueue.cancelAllQueue();
         mediaPlayer.release();
         isMainActvity=false;
+        dbUtil.close();
     }
 
     //******************************************************************播放视频
@@ -633,6 +705,7 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
         mediaPlayer.reset();
         //得到视频的URi地址
         //Uri uri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + getPackageName() + "/" + R.raw.heart);
+        filePath=url;
         Uri uri = Uri.parse(url);
         try {
             //设置视频播放地址

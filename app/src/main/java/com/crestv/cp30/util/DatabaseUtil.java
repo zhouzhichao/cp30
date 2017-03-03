@@ -114,7 +114,7 @@ public class DatabaseUtil{
      * @param
      * @return long
      */
-    public long createStudent(String name, String start,String end,int upload) {
+    public long createRecord(String name, String start,String end,int upload) {
         ContentValues initialValues = new ContentValues();
         initialValues.put(KEY_NAME, name);
         initialValues.put(KEY_START_TIME, start);
@@ -127,7 +127,7 @@ public class DatabaseUtil{
      * @param rowId
      * @return boolean
      */
-    public boolean deleteStudent(long rowId) {
+    public boolean deleteSingleRecord(long rowId) {
         return mDb.delete(DATABASE_TABLE, KEY_ROWID + "=" + rowId, null) > 0;
     }
 
@@ -135,7 +135,7 @@ public class DatabaseUtil{
      * This method will return Cursor holding all the  records.
      * @return Cursor
      */
-    public Cursor fetchAllStudents() {
+    public Cursor fetchAllRecord() {
         return mDb.query(DATABASE_TABLE, new String[] {KEY_ROWID, KEY_NAME,
                 KEY_START_TIME,KEY_END_TIME,KEY_UPLOAD}, null, null, null, null, null);
     }
@@ -146,7 +146,7 @@ public class DatabaseUtil{
      * @return Cursor
      * @throws SQLException
      */
-    public Cursor fetchStudent(int upload) throws SQLException {
+    public Cursor fetchRecord(int upload) throws SQLException {
         Cursor mCursor =
                 mDb.query(true, DATABASE_TABLE, new String[] {KEY_ROWID,
                                 KEY_NAME, KEY_START_TIME,KEY_END_TIME,KEY_UPLOAD}, KEY_UPLOAD + "=" + upload, null,
@@ -164,7 +164,7 @@ public class DatabaseUtil{
      * @param
      * @return boolean
      */
-    public boolean updateStudent(int id, int upload) {
+    public boolean updateRecord(int id, int upload) {
         ContentValues args = new ContentValues();
         args.put(KEY_NAME, name);
         args.put(KEY_UPLOAD, upload);
