@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.zhy.autolayout.utils.AutoUtils;
 
 
 public class ViewHolder
@@ -29,6 +30,8 @@ public class ViewHolder
 				false);
 		// setTag
 		mConvertView.setTag(this);
+		//对于listview，注意添加这一行，即可在item上使用高度
+		AutoUtils.autoSize(mConvertView);
 	}
 
 	/**

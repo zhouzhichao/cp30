@@ -43,4 +43,5 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:25.1.1'
     compile files('libs/jcore-android_v1.1.0.jar')
     compile files('libs/jpush-android_v3.0.1.jar')
+    compile project(':autolayout')
 }

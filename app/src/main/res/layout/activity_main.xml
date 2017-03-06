@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:transitionName="surfaceView"
     tools:context=".MainActivity">
     <RelativeLayout
@@ -12,7 +13,7 @@
         android:background="@drawable/basck">
         <TextView
             android:id="@+id/tvCountTimer"
-            android:textSize="100sp"
+            android:textSize="200px"
             android:visibility="gone"
             tools:text="30"
             android:layout_centerInParent="true"
@@ -20,38 +21,38 @@
             android:layout_height="wrap_content" />
         <TextView
             android:text="九盛中彩开奖游戏"
-            android:textSize="20sp"
+            android:textSize="60px"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="40dp"
+            android:layout_marginTop="100px"
             android:textColor="@color/lb_speech_orb_recording"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
         <TextView
             android:id="@+id/tvCurrentTime"
-            android:textSize="20sp"
+            android:textSize="50px"
             android:layout_alignParentRight="true"
-            android:layout_marginRight="20dp"
-            android:layout_marginTop="40dp"
+            android:layout_marginRight="60px"
+            android:layout_marginTop="100px"
             android:textColor="@color/lb_view_dim_mask_color"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
         <TextView
             android:id="@+id/tvCurrentNum"
             android:layout_below="@id/tvCurrentTime"
-            android:textSize="13sp"
+            android:textSize="40px"
             android:text="XXXXX彩票XXX期"
-            android:layout_marginLeft="100dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginLeft="200px"
+            android:layout_marginTop="40px"
             android:textColor="@android:color/background_dark"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
         <TextView
             android:id="@+id/tvCurrentResult"
             android:layout_below="@id/tvCurrentNum"
-            android:textSize="13sp"
+            android:textSize="40px"
             android:text="开奖结果为   6"
-            android:layout_marginLeft="100dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginLeft="200px"
+            android:layout_marginTop="20px"
             android:textColor="@android:color/background_dark"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
@@ -59,23 +60,24 @@
             android:id="@+id/tvNextTime"
             android:layout_below="@id/tvCurrentTime"
             android:text="下一期开奖时间     16:30"
-            android:textSize="16sp"
+            android:textSize="48px"
             android:layout_alignParentRight="true"
-            android:layout_marginRight="50dp"
-            android:layout_marginTop="20dp"
+            android:layout_marginRight="100px"
+            android:layout_marginTop="50px"
             android:textColor="@android:color/background_dark"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
         <LinearLayout
             android:id="@+id/llPrize"
             android:layout_below="@id/tvCurrentResult"
-            android:layout_marginLeft="100dp"
-            android:layout_marginRight="100dp"
+            android:layout_marginTop="40px"
+            android:layout_marginLeft="200px"
+            android:layout_marginRight="200px"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
             <TextView
                 android:layout_weight="1"
-                android:textSize="13sp"
+                android:textSize="40px"
                 android:gravity="center"
                 android:text="购彩人数  100000人"
                 android:textColor="@android:color/background_dark"
@@ -84,7 +86,7 @@
                 android:layout_height="wrap_content" />
             <TextView
                 android:layout_weight="1"
-                android:textSize="13sp"
+                android:textSize="40px"
                 android:gravity="center"
                 android:text="中奖人数  1000人"
                 android:textColor="@android:color/background_dark"
@@ -92,7 +94,7 @@
                 android:layout_height="wrap_content" />
             <TextView
                 android:layout_weight="1"
-                android:textSize="13sp"
+                android:textSize="40px"
                 android:gravity="center"
                 android:text="奖池金额  100000元"
                 android:textColor="@android:color/background_dark"
@@ -102,16 +104,18 @@
         <LinearLayout
             android:id="@+id/llPrizeIntroduce"
             android:orientation="horizontal"
+            android:layout_marginTop="40px"
+            android:layout_marginBottom="20px"
             android:layout_below="@id/llPrize"
             android:layout_centerHorizontal="true"
-            android:layout_width="400dp"
+            android:layout_width="1400px"
             android:layout_height="wrap_content">
             <TextView
                 android:text="中奖用户"
                 android:textColor="@color/lb_playback_controls_background_dark"
                 android:gravity="center"
                 android:layout_weight="1"
-                android:textSize="13sp"
+                android:textSize="40px"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
             <TextView
@@ -119,7 +123,7 @@
                 android:textColor="@color/lb_playback_controls_background_dark"
                 android:gravity="center"
                 android:layout_weight="1"
-                android:textSize="13sp"
+                android:textSize="40px"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
@@ -129,7 +133,7 @@
             android:layout_below="@id/llPrizeIntroduce"
             android:divider="@null"
             android:layout_centerHorizontal="true"
-            android:layout_width="400dp"
+            android:layout_width="1400px"
             android:layout_height="wrap_content"></ListView>
 
     </RelativeLayout>
@@ -146,12 +150,14 @@
             <com.crestv.cp30.view.CircleProgressBarView
                 android:id="@+id/circleProgressBar"
                 android:layout_gravity="center_horizontal"
-                android:layout_width="101dp"
-                android:layout_height="101dp"
+                app:layout_auto_basewidth="height"
+                android:layout_width="202px"
+                android:layout_height="202px"
                 />
             <TextView
                 android:id="@+id/tv"
                 android:textColor="@color/lb_browse_title_color"
+                android:textSize="26px"
                 android:layout_below="@id/circleProgressBar"
                 android:layout_gravity="center_horizontal"
                 android:layout_width="wrap_content"

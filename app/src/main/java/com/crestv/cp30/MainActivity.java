@@ -14,7 +14,6 @@
 
 package com.crestv.cp30;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
@@ -34,6 +33,8 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
@@ -62,6 +63,7 @@ import com.yanzhenjie.nohttp.rest.OnResponseListener;
 import com.yanzhenjie.nohttp.rest.Response;
 import com.yanzhenjie.permission.AndPermission;
 import com.yanzhenjie.permission.PermissionListener;
+import com.zhy.autolayout.AutoLayoutActivity;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -74,7 +76,7 @@ import java.util.List;
 /*
  * MainActivity class that loads MainFragment
  */
-public class MainActivity extends Activity  implements SurfaceHolder.Callback, View.OnClickListener{
+public class MainActivity extends AutoLayoutActivity implements SurfaceHolder.Callback, View.OnClickListener{
     private boolean isMainActvity;
     private CircleProgressBarView circleProgressBar;
     private TextView tv;
@@ -151,6 +153,10 @@ public class MainActivity extends Activity  implements SurfaceHolder.Callback, V
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //hide the status bar
+        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        //hide the title bar
+        this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_main);
         initId();
         initListener();

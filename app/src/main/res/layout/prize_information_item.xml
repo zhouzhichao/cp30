@@ -9,7 +9,7 @@
         android:textColor="@color/lb_playback_controls_background_dark"
         android:gravity="center"
         android:layout_weight="1"
-        android:textSize="13sp"
+        android:textSize="40px"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
     <TextView
@@ -18,7 +18,7 @@
         android:textColor="@color/lb_playback_controls_background_dark"
         android:gravity="center"
         android:layout_weight="1"
-        android:textSize="13sp"
+        android:textSize="40px"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
