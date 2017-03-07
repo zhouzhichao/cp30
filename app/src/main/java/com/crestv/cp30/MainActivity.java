@@ -15,6 +15,7 @@
 package com.crestv.cp30;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
@@ -70,8 +71,13 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+
+import static android.content.ContentValues.TAG;
 
 /*
  * MainActivity class that loads MainFragment
@@ -297,6 +303,7 @@ public class MainActivity extends AutoLayoutActivity implements SurfaceHolder.Ca
                 }
                 L.e("==endPlayTime","=="+playRecordEnityList.get(recordNum).getEndPlayTime());
             }
+            L.e("==","=="+what);
         }
 
         @Override
@@ -391,7 +398,7 @@ public class MainActivity extends AutoLayoutActivity implements SurfaceHolder.Ca
         surfaceHolder.addCallback(this);
         //初始化播放视频对象
         if (mediaPlayer == null) {
-            mediaPlayer = new MediaPlayer();
+            mediaPlayer = getMediaPlayer(this);
         }
 
         new Thread(new Runnable() {
@@ -782,6 +789,50 @@ public class MainActivity extends AutoLayoutActivity implements SurfaceHolder.Ca
                     w * mediaPlayer.getVideoHeight() / mediaPlayer.getVideoWidth()
             ));
         }
+    }
+
+
+    /**
+     *  博客地址： http://blog.csdn.net/ouyang_peng/
+     * 获取MediaPlayer  修复bug ( MediaPlayer: Should have subtitle controller already set )
+     * </br><a href = "http://stackoverflow.com/questions/20087804/should-have-subtitle-controller-already-set-mediaplayer-error-android/20149754#20149754">
+     *     参考链接</a>
+     *
+     *  </br> This code is trying to do the following from the hidden API
+     *   <p>
+     * </br> SubtitleController sc = new SubtitleController(context, null, null);
+     * </br> sc.mHandler = new Handler();
+     * </br> mediaplayer.setSubtitleAnchor(sc, null)</p>
+     */
+    private MediaPlayer getMediaPlayer(Context context) {
+        MediaPlayer mediaplayer = new MediaPlayer();
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.KITKAT) {
+            return mediaplayer;
+        }
+        try {
+            Class<?> cMediaTimeProvider = Class.forName("android.media.MediaTimeProvider");
+            Class<?> cSubtitleController = Class.forName("android.media.SubtitleController");
+            Class<?> iSubtitleControllerAnchor = Class.forName("android.media.SubtitleController$Anchor");
+            Class<?> iSubtitleControllerListener = Class.forName("android.media.SubtitleController$Listener");
+            Constructor constructor = cSubtitleController.getConstructor(
+                    new Class[]{Context.class, cMediaTimeProvider, iSubtitleControllerListener});
+            Object subtitleInstance = constructor.newInstance(context, null, null);
+            Field f = cSubtitleController.getDeclaredField("mHandler");
+            f.setAccessible(true);
+            try {
+                f.set(subtitleInstance, new Handler());
+            } catch (IllegalAccessException e) {
+                return mediaplayer;
+            } finally {
+                f.setAccessible(false);
+            }
+            Method setsubtitleanchor = mediaplayer.getClass().getMethod("setSubtitleAnchor",
+                    cSubtitleController, iSubtitleControllerAnchor);
+            setsubtitleanchor.invoke(mediaplayer, subtitleInstance, null);
+        } catch (Exception e) {
+            L.e(TAG,"getMediaPlayer crash ,exception = "+e);
+        }
+        return mediaplayer;
     }
 
 
