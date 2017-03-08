@@ -15,11 +15,8 @@
 package com.crestv.cp30;
 
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.content.pm.ActivityInfo;
-import android.content.res.Configuration;
 import android.database.Cursor;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -30,17 +27,13 @@ import android.os.Message;
 import android.text.format.DateFormat;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.MotionEvent;
-import android.view.SurfaceHolder;
-import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
-import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.VideoView;
 
 import com.crestv.cp30.Enity.PlayRecordEnity;
 import com.crestv.cp30.Enity.PrizeInformationEnity;
@@ -50,6 +43,7 @@ import com.crestv.cp30.adapter.PrizeInformationAdapter;
 import com.crestv.cp30.dao.Config;
 import com.crestv.cp30.util.AppUtil;
 import com.crestv.cp30.util.DatabaseUtil;
+import com.crestv.cp30.util.FileUtil;
 import com.crestv.cp30.util.GetAppId;
 import com.crestv.cp30.util.GetFilesUtil;
 import com.crestv.cp30.util.L;
@@ -70,19 +64,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
-
-import static android.content.ContentValues.TAG;
 
 /*
  * MainActivity class that loads MainFragment
  */
-public class MainActivity extends AutoLayoutActivity implements SurfaceHolder.Callback, View.OnClickListener{
+public class MainActivity extends AutoLayoutActivity implements  View.OnClickListener{
     private boolean isMainActvity;
     private CircleProgressBarView circleProgressBar;
     private TextView tv;
@@ -92,13 +80,6 @@ public class MainActivity extends AutoLayoutActivity implements SurfaceHolder.Ca
     private int errorCount;
     private RelativeLayout rlSurfaceView;
 
-    private Button btn;
-    private RelativeLayout rl;
-    private SeekBar seekBar;
-    private SurfaceView surfaceView;
-    private SurfaceHolder surfaceHolder;
-
-    private MediaPlayer mediaPlayer;//播放视频的对象
     private String filePath;
     private int w, h;
     private RelativeLayout rlMain;
@@ -140,6 +121,8 @@ public class MainActivity extends AutoLayoutActivity implements SurfaceHolder.Ca
     private ListView listViewPrize;
 
     private  DatabaseUtil dbUtil;
+    private VideoView videoView;
+
     @Override
     protected void onStart() {
         super.onStart();
@@ -371,6 +354,7 @@ public class MainActivity extends AutoLayoutActivity implements SurfaceHolder.Ca
 
 
     private void initId() {
+        videoView = ((VideoView) findViewById(R.id.videoView));
         mDialog = new AlertDialog.Builder(this);
         listViewPrize = ((ListView) findViewById(R.id.listViewPrize));
         mSharedPreferences = getSharedPreferences("videoVersionInfo", MODE_PRIVATE);
@@ -381,12 +365,6 @@ public class MainActivity extends AutoLayoutActivity implements SurfaceHolder.Ca
         circleProgressBar = ((CircleProgressBarView) findViewById(R.id.circleProgressBar));
         tv = ((TextView) findViewById(R.id.tv));
         rlSurfaceView = ((RelativeLayout) findViewById(R.id.rlSurfaceView));
-        btn = ((Button) findViewById(R.id.btn));
-        btn.setOnClickListener(this);
-        rl = ((RelativeLayout) findViewById(R.id.rlSurfaceView));
-        seekBar = ((SeekBar) findViewById(R.id.seekBar));
-
-        surfaceView = ((SurfaceView) findViewById(R.id.surfaceView));
         //获取屏幕宽和高
         DisplayMetrics displayMetrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
@@ -394,12 +372,6 @@ public class MainActivity extends AutoLayoutActivity implements SurfaceHolder.Ca
         w = displayMetrics.widthPixels;
         Log.e("======", "===" + h);
         //registerMessageReceiver();
-        surfaceHolder = surfaceView.getHolder();
-        surfaceHolder.addCallback(this);
-        //初始化播放视频对象
-        if (mediaPlayer == null) {
-            mediaPlayer = getMediaPlayer(this);
-        }
 
         new Thread(new Runnable() {
             @Override
@@ -470,8 +442,8 @@ public class MainActivity extends AutoLayoutActivity implements SurfaceHolder.Ca
                     }else if (firstChar.equals("2")){
                         checkVersion();
                     }else {
-                        rlMain.setVisibility(View.GONE);
-                        rlSurfaceView.setVisibility(View.VISIBLE);
+
+                        //rlSurfaceView.setVisibility(View.VISIBLE);
                         playVideo(0, filePath);
                         isMainActvity = false;
                     }
@@ -486,58 +458,29 @@ public class MainActivity extends AutoLayoutActivity implements SurfaceHolder.Ca
             }
         });
 
-        //seekBar监听
-        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                if (fromUser) {//用户手指拖到
-                    mediaPlayer.seekTo(progress);
-                }
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-                mediaPlayer.pause();
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-                mediaPlayer.start();
-            }
-        });
-
-
-        //控制视频  开始暂停
-        surfaceView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-               /* if (mediaPlayer != null && mediaPlayer.isPlaying()) {
-                    mediaPlayer.pause();//暂停
-                } else if (mediaPlayer != null) {
-                    mediaPlayer.start();//开始
-                }*/
-                return false;
-            }
-        });
         //视频准备播放时的监听
-        mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+        videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(MediaPlayer mp) {
                 startPlayTime=String.valueOf(System.currentTimeMillis());
+                //what为3时表示准备就绪，这时再将原来的VideoView隐藏掉就不会出现黑屏
+                mp.setOnInfoListener(new MediaPlayer.OnInfoListener() {
+                    @Override
+                    public boolean onInfo(MediaPlayer mp, int what, int extra) {
+                        if (what==3){
+                            rlMain.setVisibility(View.GONE);
+
+                        }
+                        return false;
+                    }
+                });
             }
         });
         //视频播放完成的监听
-        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+        videoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
             @Override
             public void onCompletion(MediaPlayer mp) {
-                /*ActivityOptionsCompat compat =
-                        ActivityOptionsCompat.makeSceneTransitionAnimation(MainActivity.this,
-                                surfaceView, getResources().getString(R.string.transition_movie_img));
-                Intent intent=new Intent(MainActivity.this, MainActivity.class);
-                intent.putExtra("versionCode",1);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                ActivityCompat.startActivity(MainActivity.this, intent, compat.toBundle());*/
-                rlSurfaceView.setVisibility(View.GONE);
+
                 rlMain.setVisibility(View.VISIBLE);
                 isMainActvity=true;
 
@@ -571,7 +514,6 @@ public class MainActivity extends AutoLayoutActivity implements SurfaceHolder.Ca
                     recordNum++;
                     TRequestQueue.getInstance().addStrResp(0x105, "baidu", jsonObject, mOnResponseListener);
                 }
-
             }
         });
     }
@@ -689,151 +631,26 @@ public class MainActivity extends AutoLayoutActivity implements SurfaceHolder.Ca
     protected void onDestroy() {
         super.onDestroy();
         TRequestQueue.cancelAllQueue();
-        mediaPlayer.release();
         isMainActvity=false;
         dbUtil.close();
     }
 
-    //******************************************************************播放视频
-    @Override
-    public void surfaceCreated(SurfaceHolder holder) {
-        //将视频展示到 SurfaceView上
-        mediaPlayer.setDisplay(holder);
-    }
-
-    @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
-    }
-
-    @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
-
-    }
-
-
     //播放视频方法
     private void playVideo(int pos,String url) {
-        //mediaPlayer 清空下
-        mediaPlayer.reset();
-        //得到视频的URi地址
-        //Uri uri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + getPackageName() + "/" + R.raw.heart);
+        String path= FileUtil.getSdcardFileDir("JiuSheng/Game").getAbsolutePath();
         filePath=url;
+        url=path+"/"+url;
+        L.e("==path",url);
         Uri uri = Uri.parse(url);
-        try {
-            //设置视频播放地址
-            mediaPlayer.setDataSource(MainActivity.this, uri);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        try {
-            //准备播放
-            mediaPlayer.prepare();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        //开始播放
-        mediaPlayer.start();
-        //从哪个位置开始播放
-        mediaPlayer.seekTo(pos);
-        //获取视频总时长  给seekBar设置最大值
-        seekBar.setMax(mediaPlayer.getDuration());
-        //让seekBar随着视频动
-        /*threadSeekbar=new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                        Thread.sleep(50);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    handler.sendEmptyMessage(0);
-                }
-            }
-        });
-        threadSeekbar.start();*/
-
-    }
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-
-        Log.e("AAA", "===onConfigurationChanged==");
+        //设置视频播放地址
+        videoView.setVideoURI(uri);
+        videoView.start();
     }
     //控制全屏播放
     //android:configChanges="orientation|screenSize"
     @Override
     public void onClick(View v) {
-        //横竖屏切换
-        if (getRequestedOrientation() != ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {//横屏
-            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
-            surfaceView.setLayoutParams(new RelativeLayout.LayoutParams(
-                    h,
-                    h * mediaPlayer.getVideoWidth() / mediaPlayer.getVideoHeight()
-            ));
-            rl.setLayoutParams(new RelativeLayout.LayoutParams(
-                    h,
-                    h * mediaPlayer.getVideoWidth() / mediaPlayer.getVideoHeight()
-            ));
-
-        } else if (getRequestedOrientation() != ActivityInfo.SCREEN_ORIENTATION_PORTRAIT) {//竖屏
-            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-            surfaceView.setLayoutParams(new RelativeLayout.LayoutParams(
-                    w,
-                    w * mediaPlayer.getVideoHeight() / mediaPlayer.getVideoWidth()
-            ));
-            rl.setLayoutParams(new RelativeLayout.LayoutParams(
-                    w,
-                    w * mediaPlayer.getVideoHeight() / mediaPlayer.getVideoWidth()
-            ));
-        }
     }
-
-
-    /**
-     *  博客地址： http://blog.csdn.net/ouyang_peng/
-     * 获取MediaPlayer  修复bug ( MediaPlayer: Should have subtitle controller already set )
-     * </br><a href = "http://stackoverflow.com/questions/20087804/should-have-subtitle-controller-already-set-mediaplayer-error-android/20149754#20149754">
-     *     参考链接</a>
-     *
-     *  </br> This code is trying to do the following from the hidden API
-     *   <p>
-     * </br> SubtitleController sc = new SubtitleController(context, null, null);
-     * </br> sc.mHandler = new Handler();
-     * </br> mediaplayer.setSubtitleAnchor(sc, null)</p>
-     */
-    private MediaPlayer getMediaPlayer(Context context) {
-        MediaPlayer mediaplayer = new MediaPlayer();
-        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.KITKAT) {
-            return mediaplayer;
-        }
-        try {
-            Class<?> cMediaTimeProvider = Class.forName("android.media.MediaTimeProvider");
-            Class<?> cSubtitleController = Class.forName("android.media.SubtitleController");
-            Class<?> iSubtitleControllerAnchor = Class.forName("android.media.SubtitleController$Anchor");
-            Class<?> iSubtitleControllerListener = Class.forName("android.media.SubtitleController$Listener");
-            Constructor constructor = cSubtitleController.getConstructor(
-                    new Class[]{Context.class, cMediaTimeProvider, iSubtitleControllerListener});
-            Object subtitleInstance = constructor.newInstance(context, null, null);
-            Field f = cSubtitleController.getDeclaredField("mHandler");
-            f.setAccessible(true);
-            try {
-                f.set(subtitleInstance, new Handler());
-            } catch (IllegalAccessException e) {
-                return mediaplayer;
-            } finally {
-                f.setAccessible(false);
-            }
-            Method setsubtitleanchor = mediaplayer.getClass().getMethod("setSubtitleAnchor",
-                    cSubtitleController, iSubtitleControllerAnchor);
-            setsubtitleanchor.invoke(mediaplayer, subtitleInstance, null);
-        } catch (Exception e) {
-            L.e(TAG,"getMediaPlayer crash ,exception = "+e);
-        }
-        return mediaplayer;
-    }
-
 
 }

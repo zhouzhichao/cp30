@@ -7,6 +7,19 @@
     android:transitionName="surfaceView"
     tools:context=".MainActivity">
     <RelativeLayout
+        android:id="@+id/rlSurfaceView"
+        android:background="@android:color/background_dark"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <VideoView
+            android:id="@+id/videoView"
+            android:layout_centerInParent="true"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            />
+
+    </RelativeLayout>
+    <RelativeLayout
         android:id="@+id/rlMain"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -151,8 +164,8 @@
                 android:id="@+id/circleProgressBar"
                 android:layout_gravity="center_horizontal"
                 app:layout_auto_basewidth="height"
-                android:layout_width="202px"
-                android:layout_height="202px"
+                android:layout_width="302px"
+                android:layout_height="302px"
                 />
             <TextView
                 android:id="@+id/tv"
@@ -164,35 +177,7 @@
                 android:layout_height="wrap_content" />
         </LinearLayout>
     </RelativeLayout>
-    <RelativeLayout
-        android:id="@+id/rlSurfaceView"
-        android:visibility="gone"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-        <SurfaceView
-            android:id="@+id/surfaceView"
-            android:focusable="false"
-            android:clickable="false"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
 
-        <Button
-            android:id="@+id/btn"
-            android:visibility="gone"
-            android:text="全屏"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentRight="true"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-        <SeekBar
-            android:id="@+id/seekBar"
-            android:visibility="gone"
-            android:layout_toLeftOf="@id/btn"
-            android:layout_alignParentBottom="true"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-    </RelativeLayout>
 
 
 </FrameLayout>

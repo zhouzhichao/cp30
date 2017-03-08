@@ -40,23 +40,27 @@ public class CircleProgressBarView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        int centre = getWidth()/2; //获取圆心的x坐标
         paint.setAntiAlias(true);// 设置是否抗锯齿
         paint.setFlags(Paint.ANTI_ALIAS_FLAG);// 帮助消除锯齿
         paint.setColor(Color.GRAY);// 设置画笔灰色
         paint.setStrokeWidth(10);// 设置画笔宽度
         paint.setStyle(Paint.Style.STROKE);// 设置中空的样式
-        canvas.drawCircle(100, 100, 55, paint);// 在中心为（100,100）的地方画个半径为55的圆，宽度为setStrokeWidth：10，也就是灰色的底边
+        canvas.drawCircle(centre, centre, 55, paint);// 在中心为（100,100）的地方画个半径为55的圆，宽度为setStrokeWidth：10，也就是灰色的底边
         paint.setColor(Color.GREEN);// 设置画笔为绿色
-        oval.set(45, 45, 155, 155);// 设置类似于左上角坐标（45,45），右下角坐标（155,155），这样也就保证了半径为55
+        oval.set(centre - 55, centre - 55, centre
+                + 55, centre + 55);// 设置类似于左上角坐标（45,45），右下角坐标（155,155），这样也就保证了半径为55
         canvas.drawArc(oval, -90, ((float) progress / max) * 360, false, paint);// 画圆弧，第二个参数为：起始角度，第三个为跨的角度，第四个为true的时候是实心，false的时候为空心
         paint.reset();// 将画笔重置
         paint.setStrokeWidth(3);// 再次设置画笔的宽度
         paint.setTextSize(35);// 设置文字的大小
         paint.setColor(Color.WHITE);// 设置画笔颜色
         if (progress == max) {
-            canvas.drawText("完成", 70, 110, paint);
+            float textWidth = paint.measureText("完成");
+            canvas.drawText("完成", centre - textWidth / 2, centre + 30/2, paint);
         } else {
-            canvas.drawText(progress + "%", 70, 110, paint);
+            float textWidth = paint.measureText(progress + "%");
+            canvas.drawText(progress + "%", centre - textWidth / 2, centre + 30/2, paint);
         }
     }
 }
