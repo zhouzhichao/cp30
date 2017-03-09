@@ -185,7 +185,7 @@
         <!-- Required. AppKey copied from Portal -->
         <meta-data
             android:name="JPUSH_APPKEY"
-            android:value="5797e37de4d107760501c02f" />
+            android:value="8a57b7250b5cc15ebe848eeb" />
 
         <activity
             android:name=".activity.DownLoadActivity"

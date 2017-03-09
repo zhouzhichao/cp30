@@ -57,13 +57,23 @@ public class TRequestQueue {
     }
 
     //Nohttp文件下载
-    public <T> void noHttpDownLoadFile(int what, final String url, JSONObject object, DownloadListener downloadListener){
+    public <T> void noHttpDownLoadFile(int what, final String url, JSONObject object, DownloadListener downloadListener,int key){
         /**
          * 创建请求对象
          */
         String fileName=url.substring(url.lastIndexOf("/")+1);
         Log.e("fileName==","fileName=="+fileName);
-        String filePath= FileUtil.getSdcardFileDir("JiuSheng/Game").getAbsolutePath();
+        String path;
+        if (key==0){
+            path="JiuSheng/Game";
+        }else if (key==1){
+            path="JiuSheng/Prize";
+        }else if (key==2){
+            path="JiuSheng/Ad";
+        }else {
+            path="JiuSheng/Down";
+        }
+        String filePath= FileUtil.getSdcardFileDir(path).getAbsolutePath();
         DownloadRequest downLoadRequest = NoHttp.createDownloadRequest(url,filePath,fileName,true, false);
         /*object.put("ts", ts);
         object.put("pk", pk);*/

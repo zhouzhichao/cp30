@@ -15,6 +15,7 @@
 package com.crestv.cp30;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -43,6 +44,7 @@ import com.crestv.cp30.adapter.PrizeInformationAdapter;
 import com.crestv.cp30.dao.Config;
 import com.crestv.cp30.util.AppUtil;
 import com.crestv.cp30.util.DatabaseUtil;
+import com.crestv.cp30.util.DialogLoadingUtil;
 import com.crestv.cp30.util.FileUtil;
 import com.crestv.cp30.util.GetAppId;
 import com.crestv.cp30.util.GetFilesUtil;
@@ -71,6 +73,7 @@ import java.util.List;
  * MainActivity class that loads MainFragment
  */
 public class MainActivity extends AutoLayoutActivity implements  View.OnClickListener{
+    private Dialog dialog;
     private boolean isMainActvity;
     private CircleProgressBarView circleProgressBar;
     private TextView tv;
@@ -177,7 +180,11 @@ public class MainActivity extends AutoLayoutActivity implements  View.OnClickLis
     OnResponseListener<String> mOnResponseListener=new OnResponseListener<String>() {
         @Override
         public void onStart(int what) {
-
+            if (what == 0x104) {
+                dialog = DialogLoadingUtil.beginLoading(MainActivity.this);
+                dialog.setCancelable(false);
+                dialog.show();
+            }
         }
         @Override
         public void onSucceed(int what, Response<String> response) {
@@ -281,17 +288,22 @@ public class MainActivity extends AutoLayoutActivity implements  View.OnClickLis
                         e.printStackTrace();
                     }
                     L.e("==fi","=="+playRecordEnityList.get(recordNum).getFileName());
+                    L.e("==endPlayTime","=="+playRecordEnityList.get(recordNum).getEndPlayTime());
                     recordNum++;
                     TRequestQueue.getInstance().addStrResp(0x105, "baidu", jsonObject, mOnResponseListener);
                 }
-                L.e("==endPlayTime","=="+playRecordEnityList.get(recordNum).getEndPlayTime());
+
             }
             L.e("==","=="+what);
         }
 
         @Override
         public void onFinish(int what) {
-
+            if (Integer.valueOf(what) != null) {
+                if (what == 0x104) {
+                    dialog.dismiss();
+                }
+            }
         }
     };
     //当前版本检测
@@ -328,20 +340,26 @@ public class MainActivity extends AutoLayoutActivity implements  View.OnClickLis
         TRequestQueue.getInstance().addStrRespGet(0x100, Config.UPDATE_VERJSON, mOnResponseListener);
 
     }
-    //下载视频
+    //下载开奖结果视频
+    private void downLoadVideo(String filePath) {
+        //0:下载的游戏介绍视频;1:开奖视频;2:广告视频;
+        TRequestQueue.getDownLoadInstance().noHttpDownLoadFile(0x106,filePath , new JSONObject(), downloadListener,1);
+    }
+    //下载的更新视频
     private void downLoadVideo(List<String> filePathList) {
          /*Intent intent1=new Intent(this, DownLoadActivity.class);
             intent1.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent1);*/
         rlMain.setVisibility(View.GONE);
         rlDownLoad.setVisibility(View.VISIBLE);
+        circleProgressBar.setProgress(0);
         isMainActvity=false;
         num=0;
         errorCount=0;
         // 先判断是否有权限。
         if (AndPermission.hasPermission(this, android.Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
             // 有权限，直接do anything.
-            TRequestQueue.getDownLoadInstance().noHttpDownLoadFile(0x103,filePathList.get(num) , new JSONObject(), downloadListener);
+            TRequestQueue.getDownLoadInstance().noHttpDownLoadFile(0x103,filePathList.get(num) , new JSONObject(), downloadListener,0);
         } else {
             // 申请权限。
             AndPermission.with(this)
@@ -411,24 +429,28 @@ public class MainActivity extends AutoLayoutActivity implements  View.OnClickLis
                     intent.putExtra("filePath", filePath);
                     intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);*/
-                    String firstChar=filePath.substring(0,1);
-                    String otherString=filePath.substring(1,filePath.length());
+                    final String firstChar=filePath.substring(0,1);
+                    final String otherString=filePath.substring(1,filePath.length());
                     L.e("==firstChar","=="+firstChar);
                     L.e("==otherString","=="+otherString);
-                    if (firstChar.equals("0")){
+                    if (firstChar.equals("1")){
                         new CountDownTimer(30*1000,1000) {
                             @Override
                             public void onTick(long millisUntilFinished) {
                                 tvCountTimer.setVisibility(View.VISIBLE);
                                 tvCountTimer.setText(String.valueOf(millisUntilFinished/1000));
+                                isMainActvity=false;
+                                downLoadVideo(otherString);
                             }
 
                             @Override
                             public void onFinish() {
-
+                                tvCountTimer.setVisibility(View.GONE);
+                                isMainActvity=true;
+                                playVideo(0,otherString.substring(otherString.lastIndexOf("/")+1),Integer.valueOf(firstChar));
                             }
                         }.start();
-                    }else if (firstChar.equals("1")){
+                    }else if (firstChar.equals("4")){
                         List<String> listFiles=new ArrayList<String>();
                         listFiles.add("LionHeart02.mp4");
                         listFiles.add("LionHeart04.mp4");
@@ -439,13 +461,20 @@ public class MainActivity extends AutoLayoutActivity implements  View.OnClickLis
                                 filenames[i].delete();
                             }
                         }
-                    }else if (firstChar.equals("2")){
+                    }else if (firstChar.equals("0")){
                         checkVersion();
                     }else {
-
+                        String secondChar=filePath.substring(1,2);
+                        String lastString=filePath.substring(2,filePath.length());
                         //rlSurfaceView.setVisibility(View.VISIBLE);
-                        playVideo(0, filePath);
-                        isMainActvity = false;
+                        try {
+                            int key=Integer.valueOf(secondChar);
+                            playVideo(0, lastString,Integer.valueOf(key));
+
+                        } catch (NumberFormatException e) {
+                            e.printStackTrace();
+                        }
+
                     }
                 }
             }
@@ -469,7 +498,7 @@ public class MainActivity extends AutoLayoutActivity implements  View.OnClickLis
                     public boolean onInfo(MediaPlayer mp, int what, int extra) {
                         if (what==3){
                             rlMain.setVisibility(View.GONE);
-
+                            isMainActvity = false;
                         }
                         return false;
                     }
@@ -518,21 +547,24 @@ public class MainActivity extends AutoLayoutActivity implements  View.OnClickLis
         });
     }
 
-    //下载视频监听
+    //下载视频监听 0x103:游戏介绍视频；0x106:开奖结果视频
     private DownloadListener downloadListener = new DownloadListener() {
         @Override
         public void onDownloadError(int what, Exception exception) {
             L.e("==exception==", "==" + exception);
+            if (what==0x103) {
+                if (exception.toString().contains("The network is not available")) {
 
-            if (exception.toString().contains("The network is not available")){
+                } else {
+                    errorCount++;
+                    if (errorCount > 60) {
 
-            }else {
-                errorCount++;
-                if (errorCount>60){
-
-                }else {
-                    TRequestQueue.getDownLoadInstance().noHttpDownLoadFile(0x103, filePathList.get(num), new JSONObject(), downloadListener);
+                    } else {
+                        TRequestQueue.getDownLoadInstance().noHttpDownLoadFile(0x103, filePathList.get(num), new JSONObject(), downloadListener, 0);
+                    }
                 }
+            }else if (what==0x106){
+
             }
         }
 
@@ -540,28 +572,40 @@ public class MainActivity extends AutoLayoutActivity implements  View.OnClickLis
         public void onStart(int what, boolean isResume, long rangeSize, Headers responseHeaders, long allCount) {
             L.e("==rangeSize==", "==" + rangeSize);
             L.e("==allCount==", "==" + allCount);
-            tv.setText("正在更新第"+(num+1)+"个视频，共"+filePathList.size()+"个");
-            circleProgressBar.setVisibility(View.VISIBLE);
-            circleProgressBar.setMax(100);
+            if (what==0x103) {
+                tv.setText("正在更新第" + (num + 1) + "个视频，共" + filePathList.size() + "个");
+                circleProgressBar.setVisibility(View.VISIBLE);
+                circleProgressBar.setMax(100);
+            }else if (what==0x106){
+
+            }
         }
 
         @Override
         public void onProgress(int what, int progress, long fileCount, long speed) {
-            circleProgressBar.setProgress(progress);
+            if (what==0x103) {
+                circleProgressBar.setProgress(progress);
+            }else if (what==0x106){
+
+            }
         }
 
         @Override
         public void onFinish(int what, String filePath) {
             L.e("==filePath==", "==" + filePath);
             //circleProgressBar.setVisibility(View.GONE);
-            num++;
-            if (num<filePathList.size()) {
-                TRequestQueue.getDownLoadInstance().noHttpDownLoadFile(0x103,filePathList.get(num) , new JSONObject(), downloadListener);
-            }else {
-                rlDownLoad.setVisibility(View.GONE);
-                rlMain.setVisibility(View.VISIBLE);
-                isMainActvity=true;
-                initPrizeInformation();
+            if (what==0x103) {
+                num++;
+                if (num < filePathList.size()) {
+                    TRequestQueue.getDownLoadInstance().noHttpDownLoadFile(0x103, filePathList.get(num), new JSONObject(), downloadListener, 0);
+                } else {
+                    rlDownLoad.setVisibility(View.GONE);
+                    rlMain.setVisibility(View.VISIBLE);
+                    isMainActvity = true;
+                    initPrizeInformation();
+                }
+            }else if (what==0x106){
+
             }
 
         }
@@ -636,8 +680,18 @@ public class MainActivity extends AutoLayoutActivity implements  View.OnClickLis
     }
 
     //播放视频方法
-    private void playVideo(int pos,String url) {
-        String path= FileUtil.getSdcardFileDir("JiuSheng/Game").getAbsolutePath();
+    private void playVideo(int pos,String url,int key) {
+        String filePathName;
+        if (key==0){
+            filePathName="JiuSheng/Game";
+        }else if (key==1){
+            filePathName="JiuSheng/Prize";
+        }else if (key==2){
+            filePathName="JiuSheng/Ad";
+        }else {
+            filePathName="JiuSheng/Down";
+        }
+        String path= FileUtil.getSdcardFileDir(filePathName).getAbsolutePath();
         filePath=url;
         url=path+"/"+url;
         L.e("==path",url);

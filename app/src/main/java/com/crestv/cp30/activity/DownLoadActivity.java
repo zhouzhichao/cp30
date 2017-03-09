@@ -47,7 +47,7 @@ public class DownLoadActivity extends Activity {
         // 先判断是否有权限。
         if (AndPermission.hasPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
             // 有权限，直接do anything.
-                TRequestQueue.getDownLoadInstance().noHttpDownLoadFile(0x103,filePathList.get(num) , new JSONObject(), downloadListener);
+                TRequestQueue.getDownLoadInstance().noHttpDownLoadFile(0x103,filePathList.get(num) , new JSONObject(), downloadListener,0);
         } else {
             // 申请权限。
             AndPermission.with(this)
@@ -76,7 +76,7 @@ public class DownLoadActivity extends Activity {
                 if (errorCount>60){
 
                 }else {
-                    TRequestQueue.getDownLoadInstance().noHttpDownLoadFile(0x103, filePathList.get(num), new JSONObject(), downloadListener);
+                    TRequestQueue.getDownLoadInstance().noHttpDownLoadFile(0x103, filePathList.get(num), new JSONObject(), downloadListener,0);
                 }
             }
         }
@@ -101,7 +101,7 @@ public class DownLoadActivity extends Activity {
             //circleProgressBar.setVisibility(View.GONE);
             num++;
             if (num<filePathList.size()) {
-                TRequestQueue.getDownLoadInstance().noHttpDownLoadFile(0x103,filePathList.get(num) , new JSONObject(), downloadListener);
+                TRequestQueue.getDownLoadInstance().noHttpDownLoadFile(0x103,filePathList.get(num) , new JSONObject(), downloadListener,0);
             }else {
                 //开始播放视频
                 Intent intent =new Intent(DownLoadActivity.this,MainActivity.class);
@@ -131,7 +131,7 @@ public class DownLoadActivity extends Activity {
             // 权限申请成功回调。
             if (requestCode == 100) {
                 // TODO 相应代码。
-                TRequestQueue.getDownLoadInstance().noHttpDownLoadFile(0x103, filePathList.get(num), new JSONObject(), downloadListener);
+                TRequestQueue.getDownLoadInstance().noHttpDownLoadFile(0x103, filePathList.get(num), new JSONObject(), downloadListener,0);
 
             } else if (requestCode == 101) {
                 // TODO 相应代码。
