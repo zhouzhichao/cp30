@@ -49,6 +49,7 @@ import com.crestv.cp30.util.FileUtil;
 import com.crestv.cp30.util.GetAppId;
 import com.crestv.cp30.util.GetFilesUtil;
 import com.crestv.cp30.util.L;
+import com.crestv.cp30.util.ShowToastUtil;
 import com.crestv.cp30.util.TRequestQueue;
 import com.crestv.cp30.util.UpdateAppUtil;
 import com.crestv.cp30.view.CircleProgressBarView;
@@ -248,7 +249,10 @@ public class MainActivity extends AutoLayoutActivity implements  View.OnClickLis
                 try {
                     PrizeInformationEnity prizeInformationEnity=gson.fromJson(result,PrizeInformationEnity.class);
                     listHeroBeanList.clear();
-                    listHeroBeanList.addAll(prizeInformationEnity.getData().getListHero());
+                    for (int i = 0; i < 7; i++) {
+                        listHeroBeanList.add(prizeInformationEnity.getData().getListHero().get(i));
+                    }
+                    //listHeroBeanList.addAll(prizeInformationEnity.getData().getListHero());
                     prizeInformationAdapter.notifyDataSetChanged();
                 } catch (JsonSyntaxException e) {
                     e.printStackTrace();
@@ -270,6 +274,9 @@ public class MainActivity extends AutoLayoutActivity implements  View.OnClickLis
                         dbUtil.deleteSingleRecord(Long.valueOf(_id));
                         recordNum++;
                         TRequestQueue.getInstance().addStrResp(0x105, "baidu", jsonObject, mOnResponseListener);
+                    }else {
+                        String _id = playRecordEnityList.get(recordNum - 1).getId();
+                        dbUtil.deleteSingleRecord(Long.valueOf(_id));
                     }
                 }
         }
@@ -487,6 +494,14 @@ public class MainActivity extends AutoLayoutActivity implements  View.OnClickLis
             }
         });
 
+        videoView.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+            @Override
+            public boolean onError(MediaPlayer mp, int what, int extra) {
+                ShowToastUtil.getInstance(MainActivity.this).showToast("无法播放视频！");
+                return true;
+            }
+        });
+
         //视频准备播放时的监听
         videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
@@ -521,7 +536,7 @@ public class MainActivity extends AutoLayoutActivity implements  View.OnClickLis
                 recordNum=0;
                 if(cursor != null){
                     while(cursor.moveToNext()){
-                        Log.e("Student==", "==Name: " + cursor.getString(1) +
+                        Log.e("Record==", "==Name: " + cursor.getString(1) +
                                 " start== " + cursor.getString(2)+"id=="+cursor.getString(0));
                         PlayRecordEnity playRecordEnity=new PlayRecordEnity();
                         playRecordEnity.setId(cursor.getString(0));
